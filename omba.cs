@@ -19,17 +19,20 @@ namespace omba
 {
     public class omba
     {
-        internal static FileStream fs = new FileStream($"Logs/{DateTime.Now.ToLongTimeString()}", FileMode.Create);
-        internal static StreamWriter sw = new StreamWriter(fs);
-
         public readonly EventId BotEventId = new EventId(42, "Omba");
 
         public DiscordClient Client { get; set; }
         public InteractivityExtension Interactivity { get; set; }
         public CommandsNextExtension Commands { get; set; }
 
+
         public static void Main(string[] args)
         {
+            if (!Directory.Exists("Logs"))
+            {
+                Directory.CreateDirectory("Logs");
+            }
+
             sw.AutoFlush = true;
             Console.SetOut(sw);
 
@@ -38,6 +41,9 @@ namespace omba
             var omba = new omba();
             omba.RunBotAsync().GetAwaiter().GetResult();
         }
+
+        internal static FileStream fs = new FileStream($"Logs/{DateTime.Now.ToLongTimeString()}", FileMode.Create);
+        internal static StreamWriter sw = new StreamWriter(fs);
 
         public async Task RunBotAsync()
         {
