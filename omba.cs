@@ -19,6 +19,7 @@ namespace omba
 {
     public class omba
     {
+
         public readonly EventId BotEventId = new EventId(42, "Omba");
 
         public DiscordClient Client { get; set; }
