@@ -7,8 +7,8 @@ using DSharpPlus.Entities;
 using System.Text.Json;
 
 public class Images : BaseCommandModule
-{   
-    [Command("image"), Aliases("img","i","gif")]
+{
+    [Command("image"), Aliases("img", "i", "gif")]
     public async Task displayImage(CommandContext ctx, string key)
     {
         var images = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Images.json"));
@@ -27,15 +27,16 @@ public class Images : BaseCommandModule
         {
             images.Add(key, value);
             File.WriteAllText("Images.json", JsonSerializer.Serialize<Dictionary<string, string>>(images));
-        } else
+        }
+        else
         {
             var embed = new DiscordEmbedBuilder
-                {
-                    Title = "Key exists",
-                    Description = $":no_entry: This key already exists, try something else.",
-                    Color = new DiscordColor(0xFF0000) // red
-                };
-                await ctx.RespondAsync("", embed: embed);
+            {
+                Title = "Key exists",
+                Description = $":no_entry: This key already exists, try something else.",
+                Color = new DiscordColor(0xFF0000) // red
+            };
+            await ctx.RespondAsync("", embed: embed);
         }
     }
 }
