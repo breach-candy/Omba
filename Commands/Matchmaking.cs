@@ -22,7 +22,7 @@ public class Matchmaking : BaseCommandModule
         if (nicknames.ContainsValue(nickname))
             await ctx.RespondAsync($"The name of `{nickname}` already exists!");
         else
-        { 
+        {
             try
             {
                 string oldNick = "0";
