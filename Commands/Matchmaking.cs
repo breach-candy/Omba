@@ -7,7 +7,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 public class Matchmaking : BaseCommandModule
 {
