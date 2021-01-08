@@ -8,7 +8,7 @@ using System.Text.Json;
 
 public class Images : BaseCommandModule
 {
-    [Command("image"), Aliases("img", "i", "gif")]
+    [Command("image"), Aliases("img", "i", "gif", "meme")]
     public async Task displayImage(CommandContext ctx, string key)
     {
         var images = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Images.json"));
@@ -18,9 +18,9 @@ public class Images : BaseCommandModule
         }
     }
 
-    [Command("addimage"), Aliases("addimg")]
+    [Command("addimage"), Aliases("addimg", "addmeme")]
     [RequireUserPermissions(DSharpPlus.Permissions.Administrator)]
-    public async Task addImage(CommandContext ctx, string key, string value)
+    public async Task addImage(CommandContext ctx, string key, [RemainingText] string value)
     {
         var images = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Images.json"));
         if (!images.ContainsKey(key))
