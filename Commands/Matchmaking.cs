@@ -16,7 +16,7 @@ public class Matchmaking : BaseCommandModule
     [Command("setname")]
     [Description("set nickname")]
     [requireChannel(747801198312030310)]
-    public async Task setName(CommandContext ctx, string nickname)
+    public async Task setName(CommandContext ctx, [RemainingText] string nickname)
     {
         var nicknames = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Nicknames.json"));
         if (nicknames.ContainsValue(nickname))
@@ -93,7 +93,7 @@ public class Matchmaking : BaseCommandModule
         if (register(ctx.Message.Author.Mention))
             await ctx.RespondAsync($"You are already in the queue. `{queue.Count}` in queue.");
         else
-            await ctx.RespondAsync($"{ctx.Message.Author.Username} added to queue. `{queue.Count}` in queue.");
+            await ctx.RespondAsync($"{switcheroo(ctx.Message.Author.Mention)} added to queue. `{queue.Count}` in queue.");
     }
 
     //Force register
