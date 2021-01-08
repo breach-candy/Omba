@@ -108,6 +108,7 @@ namespace omba
 
             // up next, let's register our commands
             this.Commands.RegisterCommands<Matchmaking>();
+            this.Commands.RegisterCommands<Images>();
 
 
             // finally, let's connect and log in
