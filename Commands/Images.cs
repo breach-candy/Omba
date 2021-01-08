@@ -30,12 +30,10 @@ public class Images : BaseCommandModule
         }
         else
         {
-            var embed = new DiscordEmbedBuilder
-            {
-                Title = "Key exists",
-                Description = $":no_entry: This key already exists, try something else.",
-                Color = new DiscordColor(0xFF0000) // red
-            };
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Key exists")
+                .WithColor(new DiscordColor(0xFF0000))
+                .WithDescription(":no_entry: This key already exists, try something else.");
             await ctx.RespondAsync("", embed: embed);
         }
     }
