@@ -9,7 +9,7 @@ using System.Text.Json;
 public class Images : BaseCommandModule
 {
     [Command("image"), Aliases("img", "i", "gif", "meme")]
-    public async Task displayImage(CommandContext ctx, string key)
+    public async Task displayImage(CommandContext ctx, [RemainingText] string key)
     {
         var images = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Images.json"));
         if (images.ContainsKey(key))
