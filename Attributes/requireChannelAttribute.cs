@@ -6,16 +6,16 @@ using DSharpPlus.CommandsNext.Attributes;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class requireChannelAttribute : CheckBaseAttribute
 {
-    public string AllowedChannel { get; private set; }
+    public string allowedChannel { get; private set; }
 
-    public requireChannelAttribute(string Id)
+    public requireChannelAttribute(string name)
     {
-        AllowedChannel = Id;
+        allowedChannel = name;
     }
 
     public override Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
     {
-        return Task.FromResult(AllowedChannel == ctx.Channel.Name);
+        return Task.FromResult(allowedChannel == ctx.Channel.Name);
     }
 }
 

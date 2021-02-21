@@ -8,4 +8,10 @@ using System.Text.Json;
 
 public class Bounties : BaseCommandModule
 {
+    [Command("setbounty")]
+    [Description("Set a bounty on a player. I.E. ?setbounty Pelley, 500000000, Must be in corvette")]
+    public async Task setbounty(CommandContext ctx, string player, string bounty, [RemainingText] string extra)
+    {
+        
+    }
 }

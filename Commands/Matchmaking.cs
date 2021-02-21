@@ -10,9 +10,51 @@ using System.Text.Json;
 
 public class Matchmaking : BaseCommandModule
 {
-    List<string> queue = new List<string>();
+    internal Dictionary<ulong, List<string>> queue;
 
-    public bool nameset(string name, [RemainingText] string nickname)
+    public Matchmaking()
+    {
+        queue = new Dictionary<ulong, List<string>>()
+        {
+            { 695448160402931722, new List<string>()},
+            { 805244707290611722, new List<string>()}
+        };
+    }
+
+    public string convertName(string name)
+    {
+        var nicknames = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Nicknames.json"));
+        if (nicknames.ContainsKey(name))
+            return nicknames[name];
+        else
+            return name;
+    }
+
+    public bool register(ulong server, string name, bool mode)
+    {
+        if (mode)
+        {
+            if ((!queue[server].Contains(convertName(name))))
+            {
+                queue[server].Add(convertName(name));
+                return true;
+            }
+            else
+                return false;
+        }
+        else
+        {
+            if ((queue[server].Contains(convertName(name))))
+            {
+                queue[server].Remove(convertName(name));
+                return true;
+            }
+            else
+                return false;
+        }
+    }
+
+    public bool nameset(string name, ulong server, [RemainingText] string nickname)
     {
         var nicknames = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Nicknames.json"));
         if (nicknames.ContainsValue(nickname))
@@ -27,15 +69,15 @@ public class Matchmaking : BaseCommandModule
             }
             nicknames.Add(name, nickname);
             File.WriteAllText("Nicknames.json", JsonSerializer.Serialize<Dictionary<string, string>>(nicknames));
-            if (queue.Contains(name))
+            if (queue[server].Contains(name))
             {
-                queue.Remove(name);
-                queue.Add(nicknames[name]);
+                register(server, name, false);
+                register(server, nicknames[name], true);
             }
-            else if (queue.Contains(oldNick))
+            else if (queue[server].Contains(oldNick))
             {
-                queue.Remove(oldNick);
-                queue.Add(nicknames[name]);
+                register(server, oldNick, false);
+                register(server, nicknames[name], true);
             }
             return (false);
         }
@@ -46,82 +88,59 @@ public class Matchmaking : BaseCommandModule
     [requireChannel("the-matchmaking-channel")]
     public async Task setName(CommandContext ctx, [RemainingText] string nickname)
     {
-        if (nameset(ctx.Message.Author.Mention, nickname))
+        if (nameset(ctx.Message.Author.Mention, ctx.Guild.Id, nickname))
         {
-            await ctx.RespondAsync($"The name of `{nickname}` already exists!");
+            await ctx.RespondAsync($"The name of **{nickname}** already exists!");
         }
-        else if (nameset(ctx.Message.Author.Mention, nickname))
+        else if (nameset(ctx.Message.Author.Mention, ctx.Guild.Id, nickname))
         {
-            await ctx.RespondAsync($"Nickname set for `{ctx.Message.Author.Username}`: **{nickname}**");
+            await ctx.RespondAsync($"Nickname set for **{ctx.Message.Author.Username}**: **{nickname}**");
         }
     }
+
     [Command("setnamefor")]
-    [Description("Set another users name. Admin only.")]
-    [RequireUserPermissions(DSharpPlus.Permissions.Administrator)]
+    [Description("Set another users name. Owner only.")]
+    [RequireOwner]
     [requireChannel("the-matchmaking-channel")]
     public async Task setNameFor(CommandContext ctx, string name, [RemainingText] string nickname)
     {
-        if (nameset(name, nickname))
+        if (nameset(name, ctx.Guild.Id, nickname))
         {
-            await ctx.RespondAsync($"The name of `{nickname}` already exists!");
+            await ctx.RespondAsync($"The name of **{nickname}** already exists!");
         }
-        else if (nameset(name, nickname))
+        else if (nameset(name, ctx.Guild.Id, nickname))
         {
-            await ctx.RespondAsync($"Nickname set for `{name}`: **{nickname}**");
+            await ctx.RespondAsync($"Nickname set for **{name}**: **{nickname}**");
         }
-    }
-
-    public string switcheroo(string name)
-    {
-        var nicknames = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText("Nicknames.json"));
-        if (nicknames.ContainsKey(name))
-            return nicknames[name];
-        else
-            return name;
-    }
-
-    public bool register(string name)
-    {
-        if (queue.Contains(switcheroo(name)))
-            return true;
-        else
-        {
-            queue.Add(switcheroo(name));
-            return false;
-        }
-    }
-
-    public bool unregister(string name)
-    {
-        if (queue.Contains(switcheroo(name)))
-        {
-            queue.Remove(switcheroo(name));
-            return true;
-        }
-        else
-            return false;
     }
 
     [Command("register"), Aliases("r", "reg")]
     [Description("Please type ?reg in the matchmaking channel.")]
     [requireChannel("the-matchmaking-channel")]
-    public async Task reg(CommandContext ctx)
+    public async Task reg(CommandContext ctx, [RemainingText] string name = "")
     {
-        if (register(ctx.Message.Author.Mention))
-            await ctx.RespondAsync($"You are already in the queue. `{queue.Count}` in queue.");
+        if (name == "")
+            name = ctx.Message.Author.Mention;
+        if (register(ctx.Guild.Id, name, true))
+            await ctx.RespondAsync($"**{convertName(name)}** added to queue. **{queue[ctx.Guild.Id].Count}** in queue.");
         else
-            await ctx.RespondAsync($"{switcheroo(ctx.Message.Author.Mention)} added to queue. `{queue.Count}` in queue.");
+            await ctx.RespondAsync($"**{convertName(name)}** is already in the queue. **{queue[ctx.Guild.Id].Count}** in queue.");
+
     }
 
-    [Command("forcereg"), Aliases("fr", "freg")]
-    [Description("Force register another user.")]
+    [Command("unregister"), Aliases("ur", "ureg")]
+    [Description("Remove yourself from the queue.")]
     [requireChannel("the-matchmaking-channel")]
-    public async Task freg(CommandContext ctx, [RemainingText] string name)
+    public async Task ureg(CommandContext ctx, [RemainingText] string name = "")
     {
-        if (register(name))
-            await ctx.RespondAsync($"{name} is already in the queue. `{queue.Count}` in queue.");
+        if (name == "")
+            name = ctx.Message.Author.Mention;
+
+        if (register(ctx.Guild.Id, name, false))
+            await ctx.RespondAsync($"**{convertName(name)}** removed from queue. **{queue[ctx.Guild.Id].Count}** in queue.");
         else
-            await ctx.RespondAsync($"{ctx.Message.Author.Username} added `{name}` to queue. `{queue.Count}` in queue.");
+            await ctx.RespondAsync($"**{convertName(name)}** is not in the queue.");
+
     }
 
     [Command("clear"), Aliases("c")]
@@ -129,30 +148,26 @@ public class Matchmaking : BaseCommandModule
     [requireChannel("the-matchmaking-channel")]
     public async Task clear(CommandContext ctx)
     {
-        queue.Clear();
-        await ctx.RespondAsync($"{ctx.Message.Author.Username} cleared the queue.");
+        queue[ctx.Guild.Id].Clear();
+        await ctx.RespondAsync($"**{ctx.Message.Author.Username}** cleared the queue.");
     }
 
-    [Command("unregister"), Aliases("unreg", "ur")]
-    [Description("Unregister yourself from the queue.")]
+    [Command("queue"), Aliases("q", "show")]
+    [Description("Display the queue.")]
     [requireChannel("the-matchmaking-channel")]
-    public async Task unreg(CommandContext ctx)
+    public async Task displayQueue(CommandContext ctx)
     {
-        if (unregister(ctx.Message.Author.Mention))
-            await ctx.RespondAsync($"Removed from queue. `{queue.Count}` in queue.");
+        if (queue[ctx.Guild.Id].Count == 0)
+            await ctx.RespondAsync("There is no one in the queue.");
         else
-            await ctx.RespondAsync("You are not in the queue.");
-    }
-
-    [Command("removereg"), Aliases("rfreg", "rf", "rreg")]
-    [Description("Unregister another user from the queue.")]
-    [requireChannel("the-matchmaking-channel")]
-    public async Task rfreg(CommandContext ctx, [RemainingText] string name)
-    {
-        if (unregister(name))
-            await ctx.RespondAsync($"Removed from queue. `{queue.Count}` in queue.");
-        else
-            await ctx.RespondAsync($"{name} is not in the queue.");
+        {
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle($"{queue[ctx.Guild.Id].Count()} in queue")
+                .WithColor(new DiscordColor(0xFF55FF))
+                .WithThumbnail($"{ctx.Guild.IconUrl}")
+                .WithDescription($"{string.Join("\n", queue[ctx.Guild.Id])}");
+            await ctx.RespondAsync("", embed: embed);
+        }
     }
 
     [Command("roll"), Aliases("rr", "reroll")]
@@ -160,16 +175,12 @@ public class Matchmaking : BaseCommandModule
     [requireChannel("the-matchmaking-channel")]
     public async Task roll(CommandContext ctx)
     {
-        List<string> team1 = new List<string>();
-        List<string> team2 = new List<string>();
-        Random random = new Random();
-        if (queue.Count == 0)
-        {
-            await ctx.RespondAsync("There is no one in the queue.");
-        }
+        List<string> team1 = new List<string>(); List<string> team2 = new List<string>(); Random random = new Random();
+        if (queue[ctx.Guild.Id].Count == 0 || queue[ctx.Guild.Id].Count == 1)
+            await ctx.RespondAsync("There are not enough people to roll a fight.");
         else
         {
-            List<string> teams = queue.ToList();
+            List<string> teams = queue[ctx.Guild.Id].ToList();
             for (int i = teams.Count; i > 0; i--)
             {
                 var randomIndex = random.Next(teams.Count);
@@ -184,35 +195,15 @@ public class Matchmaking : BaseCommandModule
                 }
                 teams.RemoveAt(randomIndex);
             }
-            string theDate = DateTime.Now.ToString("HH:mm:ss");
             var embed = new DiscordEmbedBuilder()
                 .WithTitle($"{team1.Count()}v{team2.Count()} prepared")
                 .WithColor(new DiscordColor(0xFF55FF))
-                .WithThumbnail("https://i.imgur.com/neLGbRS.png")
+                .WithThumbnail($"{ctx.Guild.IconUrl}")
                 .AddField($"Team 1", $"{string.Join("\n", team1)}", true)
                 .AddField($"Team 2", $"{string.Join("\n", team2)}", true);
             await ctx.RespondAsync("", embed: embed);
             team1.Clear(); team2.Clear();
         }
 
-    }
-
-    [Command("queue"), Aliases("q", "show")]
-    [Description("Display the queue.")]
-    [requireChannel("the-matchmaking-channel")]
-    public async Task displayQueue(CommandContext ctx)
-    {
-        if (queue.Count == 0)
-            await ctx.RespondAsync("There is no one in the queue.");
-        else
-        {
-            var embed = new DiscordEmbedBuilder
-            {
-                Title = $"{queue.Count()} in queue",
-                Description = $"{string.Join(", ", queue)}",
-                Color = new DiscordColor(0xFF55FF)
-            };
-            await ctx.RespondAsync("", embed: embed);
-        }
     }
 }
