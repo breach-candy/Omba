@@ -19,7 +19,9 @@ public class Matchmaking : BaseCommandModule
             //Borann Boys
             {695448160402931722, new List<string>()},
             //Based Hub
-            {836519174472728586, new List<string>()}
+            {836519174472728586, new List<string>()},
+            //TCSE
+            {805244707290611722, new List<string>()}
         };
     }
 
@@ -260,7 +262,7 @@ public class Matchmaking : BaseCommandModule
                 .WithThumbnail($"{ctx.Guild.IconUrl}")
                 .WithImageUrl(images[random.Next(images.Count)])
                 .AddField($"Team 1", $"{string.Join("\n", team1)}", true)
-                .WithFooter(DateTime.Now.ToString(), "https://cdn.discordapp.com/attachments/838143199289278534/838143225134579712/breach_candy.png")
+                .WithFooter(DateTime.Now.ToString(), "https://media.discordapp.net/attachments/838143199289278534/851910088075247626/MOSHED-2021-6-8-14-45-47.jpg")
                 .AddField($"Team 2", $"{string.Join("\n", team2)}", true);
             await ctx.RespondAsync("", embed: embed);
             team1.Clear(); team2.Clear();
